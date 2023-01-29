@@ -70,3 +70,53 @@ func DeletaProduto(id string) {
 	deletaProdutoPorId.Exec(id)
 	defer db.Close()
 }
+
+func BuscaProdutoPorId(id string) Produto {
+	db := db.ConectaComBancoDeDados()
+
+	buscaProdutoPorId, err := db.Query("SELECT * FROM produtos WHERE id=$1", id)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	produtoFinal := Produto{}
+	for buscaProdutoPorId.Next() {
+
+		var id, quantidade int
+		var nome, descricao string
+		var preco float64
+
+		err = buscaProdutoPorId.Scan(&id, &nome, &descricao, &preco, &quantidade)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		produtoFinal.Id = id
+		produtoFinal.Nome = nome
+		produtoFinal.Descricao = descricao
+		produtoFinal.Preco = preco
+		produtoFinal.Quantidade = quantidade
+	}
+	defer db.Close()
+	return produtoFinal
+}
+
+func AtualizaProduto(id int, nome, descricao string, preco float64, quantidade int) {
+	produtoParaAtualizar := Produto{}
+
+	produtoParaAtualizar.Id = id
+	produtoParaAtualizar.Nome = nome
+	produtoParaAtualizar.Descricao = descricao
+	produtoParaAtualizar.Preco = preco
+	produtoParaAtualizar.Quantidade = quantidade
+
+	db := db.ConectaComBancoDeDados()
+
+	atualizaProduto, err := db.Prepare("UPDATE produtos SET nome=$1, descricao=$2, preco=$3, quantidade=$4 WHERE id=$5")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	atualizaProduto.Exec(nome, descricao, preco, quantidade, id)
+	defer db.Close()
+}

@@ -44,9 +44,37 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
-
 	idDoProduto := r.URL.Query().Get("id")
 	models.DeletaProduto(idDoProduto)
 
+	http.Redirect(w, r, "/", 301)
+}
+
+func Edit(w http.ResponseWriter, r *http.Request) {
+	idDoProduto := r.URL.Query().Get("id")
+	temp.ExecuteTemplate(w, "Edit", models.BuscaProdutoPorId(idDoProduto))
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "POST" {
+
+		id, err := strconv.Atoi(r.FormValue("id"))
+		if err != nil {
+			log.Println("Não foi possível converter ID, ", err)
+		}
+		nome := r.FormValue("nome")
+		descricao := r.FormValue("descricao")
+		quantidade, err := strconv.Atoi(r.FormValue("quantidade"))
+		if err != nil {
+			log.Println("Não foi possível converter a quantidade, ", err)
+		}
+		preco, err := strconv.ParseFloat(r.FormValue("preco"), 64)
+		if err != nil {
+			log.Println("Não foi possível converter o Preço, ", err)
+		}
+
+		models.AtualizaProduto(id, nome, descricao, preco, quantidade)
+	}
 	http.Redirect(w, r, "/", 301)
 }
